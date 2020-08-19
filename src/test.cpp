@@ -7,22 +7,21 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "bounded.h"
+//#include "bounded.h"
 #include "intLock.h"
 #include "keyevent.h"
 #include "user.h"
-#include "Event.h"
+#include "event.h"
 #include "semaphor.h"
+#include "ivtent.h"
+#include "bounded.h"
 
-//---------------------------------------------------------------------------//
-//  Otkomentarisati ukoliko se testiraju signali
-//---------------------------------------------------------------------------//
-// #define SIGNAL
-//---------------------------------------------------------------------------//
+//Semaphore* mutex = 0;
 
-//---------------------------------------------------------------------------//
-//  Ovo se menja u testu
-//---------------------------------------------------------------------------//
+extern volatile int critical;
+extern volatile int forceTimer;
+
+int syncPrintf(const char *format, ...);
 
 Time TIME_SLICE = 2;   // 0 ili defaultTimeSlice
 
@@ -173,7 +172,6 @@ int userMain (int argc, char* argv[])
 
 	for (i=0; i<N; i++){
 		pro[i] = new Producer(buff,'0'+i, TIME_SLICE);
-		
 #ifdef SIGNAL
 		if (i==0)
 		{

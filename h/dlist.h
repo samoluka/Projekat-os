@@ -28,8 +28,6 @@ private:
         }
         static void del_node(Node *n)
         {
-            if (!n)
-                return;
             n->next = NULL;
             delete n;
         }
@@ -47,13 +45,26 @@ public:
         tail = NULL;
         n = 0;
     }
+    ~DoubleList(){
+        while(head){
+            Node* tmp;
+            tmp = head;
+            head = head->next;
+            Node::del_node(tmp);
+        }
+        tail = NULL;
+        delete head;
+        delete tail;
+    }
     void insert_sorted(int value, int id)
     {
-       Node *place = head;
+        Node *place = head, *last = 0;
         while (place && place->value<=value)
         {
             if (place->value == value)
                 break;
+            value -=place->value;
+            last = place;
             place = place->next;
         }
         if (place) {
@@ -61,24 +72,20 @@ public:
                 place->insert(id);
             }
             else {
-
-                Node* tmp = head;
-                while (tmp->next && tmp->next->value <value) {
-                    tmp=tmp->next;
-                }
                 n++;
                 Node* nn = new Node(value, id);
-                if (tmp == head && tmp->value>value) {
-
+                if (place == head) {
                     head = nn;
-                    nn->next = tmp;
+                    nn->next = place;
                 }
                 else {
-                    nn->next = tmp->next;
-                    tmp->next = nn;
+                    nn->next = place;
+                    last->next = nn;
                 }
                 if (!nn->next) {
                     tail=nn;
+                }else{
+                    nn->next->value -=nn->value;
                 }
             }
             return;
@@ -90,7 +97,8 @@ public:
             tail = nn;
         }
         else {
-            tail = tail->next = nn;
+            tail->next = nn;
+            tail = tail->next;
         }
     }
     Node *find(int ID)
@@ -105,71 +113,79 @@ public:
         return tmp;
     }
     void lower() {
-        Node* tmp = head;
-        while (tmp) {
-            tmp->value--;
-            tmp=tmp->next;
+        // Node* tmp = head;
+        // while (tmp) {
+        //     tmp->value--;
+        //     tmp=tmp->next;
+        // }
+        if (head){
+            head->value--;
         }
     }
     void del_head() {
         if (head) {
             Node* tmp = head;
             head = head->next;
+            if (head == NULL){
+                tail = NULL;
+            }
             Node::del_node(tmp);
             n--;
         }
     }
     void del_by_id(int id) {
         Node* tmp = head;
+        Node* last = 0;
         while (tmp) {
-            List::Node* f = tmp->my->find(id);
-            if (f) {
-                tmp->my->delete_elem(id);
-                if (tmp->my->empty()) {
-                    delete_elem(tmp->value);
+            int o = tmp->my->delete_elem(id);
+            if (tmp->my->empty()) {
+                if (last == 0){
+                    head = head->next;
+                    if (head == NULL){
+                        tail = NULL;
+                    }
+                }else{
+                    last->next = tmp->next;
+                    if (last->next == NULL){
+                        tail = last;
+                    }
                 }
+                Node::del_node(tmp);
+                n--;
                 return;
             }
+            if (o) return;
+            last = tmp;
             tmp=tmp->next;
         }
     }
-    void delete_elem(int ID)
-    {
-        Node *tmp = head;
-        Node *tmpp = NULL;
-        while (tmp)
-        {
-            if (tmp->value == ID)
-                break;
-            tmpp = tmp;
-            tmp = tmp->next;
-        }
-        if (!tmp)
-            return;
-        if (tmp == head)
-        {
-            head = tmp->next;
-            if (tmp == tail)
-                tail = head;
-            n--;
-            Node::del_node(tmp);
-            return;
-        }
-        if (tmp == tail)
-        {
-            tail = tmpp;
-            tmpp->next = NULL;
-            n--;
-            Node::del_node(tmp);
-            return;
-        }
-        tmpp->next = tmp->next;
-        n--;
-        Node::del_node(tmp);
-        return;
-    }
+    // void delete_elem(int ID)
+    // {
+    //     Node* tmp = head, *last = 0;
+    //     while(tmp != NULL){
+    //         if (tmp->value == ID)
+    //             break;
+    //         last = tmp;
+    //         tmp = tmp->next;
+    //     }
+    //     if (!tmp) return;
+    //     n--;
+    //     if (last){
+    //         last->next = tmp->next;
+    //         if (last->next == NULL){
+    //             tail = last;
+    //         }
+    //     }else{
+    //         head = tmp->next;
+    //         if (!head){
+    //             tail = NULL;
+    //         }
+    //     }
+    //     Node::del_node(tmp);
+    //     return;
+    // }
     short empty() {
-        return n==0;
+        return head == NULL;
     }
     void print() {
         Node* tmp = head;

@@ -37,16 +37,28 @@ public:
         tail = NULL;
         n = 0;
     }
+    ~List(){
+        while(head){
+            Node* tmp;
+            tmp = head;
+            head = head->next;
+            Node::del_node(tmp);
+        }
+        tail = NULL;
+        delete head;
+        delete tail;
+    }
     void insert(int value)
     {
         n++;
-        if (!head)
+        if (head == NULL)
         {
             head = new Node(value);
             tail = head;  
             return;
         }
-        tail = tail->next = new Node(value);
+        tail->next = new Node(value);
+        tail = tail->next;
     }
     Node *find(int ID)
     {
@@ -59,43 +71,43 @@ public:
         }
         return NULL;
     }
-    void delete_elem(int ID)
+    void del_head(){
+        if(head){
+            Node* tmp = head;
+            head = head->next;
+            if(head == NULL){
+                tail = NULL;
+            }
+            Node::del_node(tmp);
+        }
+    }
+    int delete_elem(int ID)
     {
-        Node *tmp = head;
-        Node *tmpp = NULL;
-        while (tmp)
-        {
+        Node* tmp = head, *last = 0;
+        while(tmp != NULL){
             if (tmp->value == ID)
                 break;
-            tmpp = tmp;
+            last = tmp;
             tmp = tmp->next;
         }
-        if (!tmp)
-            return;
-        if (tmp == head)
-        {
-            head = tmp->next;
-            if (tmp == tail)
-                tail = head;
-            n--;
-            Node::del_node(tmp);
-            return;
-        }
-        if (tmp == tail)
-        {
-            tail = tmpp;
-            tmpp->next = NULL;
-            n--;
-            Node::del_node(tmp);
-            return;
-        }
-        tmpp->next = tmp->next;
+        if (!tmp) return 0;
         n--;
+        if (last){
+            last->next = tmp->next;
+            if (last->next == NULL){
+                tail = last;
+            }
+        }else{
+            head = head->next;
+            if (!head){
+                tail = NULL;
+            }
+        }
         Node::del_node(tmp);
-        return;
+        return 1;
     }
     short empty(){
-        return n==0;
+        return head == NULL;
     }
 };
 

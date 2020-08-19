@@ -7,16 +7,21 @@
 
 // zabranjuje prekide
 #define lock{\
- asm pushf;\
- asm cli;\
+    oldCE = critical;\
+    critical = 1;\
 }
 
 // dozvoljava prekide
-#define unlock asm popf
+#define unlock {\
+    critical = oldCE;\
+}
 
-int KernelEv::maxSemEvent = 500;
-int KernelEv::curr = 0;
-KernelEv** KernelEv::allSemEvent = new KernelEv*[KernelEv::maxSemEvent];
+extern volatile int critical;
+extern volatile int theEnd;
+volatile int oldCE;
+
+//int KernelEv::maxSemEvent = 250;
+KernelEv** KernelEv::allSemEvent = new KernelEv*[255];
 
 void KernelEv::wait() {
     lock;
@@ -24,31 +29,30 @@ void KernelEv::wait() {
         unlock;
         return;
     }
-    if (this->val) {
+    if (this->val == 1) {
         this->val = 0;
         unlock;
         return;
     }
     this->waiting = PCB::running->myId;
-    PCB::running->active -= 1;
     PCB::running->blocked = 1;
+    //cout <<"nit ceka signal za event:"<<PCB::running->myId<<endl;
     unlock;
     dispatch();
 }
 void KernelEv::signal() {
-    lock;
+    //lock;
     if (this->waiting == -1) {
-        val = 1;
+        this->val = 1;
         return;
     }
-    PCB::allPCB[this->myThreadId]->active+=1;
-    PCB::allPCB[this->myThreadId]->blocked=0;
-    //PCB::allPCB[this->myThreadId]->slept = 0;
-    PCB::sleeping->del_by_id(this->myThreadId);
-    if (PCB::allPCB[this->myThreadId]->waitingOn)
-        PCB::allPCB[this->myThreadId]->waitingOn->waiting.delete_elem(this->myThreadId);
-    Scheduler::put(PCB::allPCB[this->myThreadId]);
+    if (PCB::allPCB[this->waiting]){
+        PCB::allPCB[this->waiting]->blocked = 0;
+        PCB::allPCB[this->waiting]->slept = 0;
+        Scheduler::put(PCB::allPCB[this->waiting]);
+    }
     this->waiting = -1;
-    unlock;
+    //cout <<"signal za event:"<<this->myThreadId<<theEnd<<endl;
+    //unlock;
     return;
 }

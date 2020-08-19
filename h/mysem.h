@@ -4,11 +4,11 @@
 class KernelSem {
 public:
     KernelSem(int initValue);
-    ~KernelSem() {};
+    ~KernelSem();
     int wait(unsigned int time);
     int signal(int n);
     int value;
-    List waiting;
+    List* waiting;
 };
 
 #endif

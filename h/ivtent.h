@@ -15,10 +15,11 @@ public:
         num = numEntry;
     }
     void signal() {
-        for (int i=0; i<KernelEv::curr; i++) {
-            if (KernelEv::allSemEvent[i]->ev == num)
-                KernelEv::allSemEvent[i]->signal();
-        }
+        // for (int i=0; i<KernelEv::curr; i++) {
+        //     if (KernelEv::allSemEvent[i]->ev == num)
+        //         KernelEv::allSemEvent[i]->signal();
+        if (KernelEv::allSemEvent[num] != NULL)
+            KernelEv::allSemEvent[num]->signal();
     }
     void callOld();
 private:

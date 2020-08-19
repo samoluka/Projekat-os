@@ -14,9 +14,9 @@
 
 int syncPrintf(const char *format, ...)
 {
-	lock;
 	int res;
 	va_list args;
+	lock;
 	va_start(args, format);
 	res = vprintf(format, args);
 	va_end(args);

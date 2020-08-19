@@ -9,6 +9,8 @@
 
 class WaitingThread;
 
+
+
 class PCB
 {
 public:
@@ -26,10 +28,11 @@ public:
     int active;
     int quantum;
     int myId;
-    short finished;
-    short blocked;
-    short slept;
-    short started;
+    volatile int finished;
+    volatile int blocked;
+    volatile int started;
+    volatile int for_wait;
+    volatile int slept;
 
     Thread *myThread;
     List waitForMe;
@@ -38,18 +41,16 @@ public:
     {
         if (running->myThread && !running->finished) {
             running->myThread->run();
-            running->active -= 1;
             running->finished = 1;
+            running->blocked = 1;
             //sleeping->del_by_id(running->myId);
         }
         if (!running->waitForMe.empty()) {
             List::Node* tmp = running->waitForMe.head;
             while (tmp) {
                 //if (tmp->value<id && tmp->value >0) {
-                allPCB[tmp->value]->active += 1;
-                if (allPCB[tmp->value]->active >= 1)
-                    Scheduler::put(allPCB[tmp->value]);
-                //}
+                allPCB[tmp->value]->blocked = 0;
+                Scheduler::put(allPCB[tmp->value]);
                 tmp = tmp->next;
             }
         }
@@ -58,7 +59,7 @@ public:
     static void initPCB() {
         // PCB::running = PCB::allPCB[1];
         PCB::running = new PCB(defaultTimeSlice,defaultStackSize,NULL);
-        cout <<PCB::running->myId<<endl;
+        //cout <<PCB::running->myId<<endl;
         // PCB::running->myId = 1;
         // PCB::running->active = 1;
         // PCB::running->slept = 0;
@@ -83,6 +84,7 @@ public:
         quantum = time;
         active = 1;
         started = 0;
+        for_wait = 0;
         waitingOn= NULL;
         //waitForMe = new List();
         finished = 0;
@@ -99,7 +101,7 @@ public:
     }
 
 
-    ~PCB(){  
+    ~PCB(){ 
         delete[] stack;
     }
 };

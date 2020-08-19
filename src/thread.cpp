@@ -8,7 +8,7 @@
 #include <FSTREAM.H>
 
 int PCB::id = 0;
-const int maxPCB = 500;
+const int maxPCB = 150;
 PCB **PCB::allPCB = new PCB*[maxPCB];
 WaitingThread* PCB::wt = new WaitingThread();
 DoubleList* PCB::sleeping = new DoubleList();
@@ -17,20 +17,21 @@ volatile int cntr = defaultTimeSlice;
 volatile int context_switch_on_demand = 0;
 volatile int lockFlag = 1;
 volatile int forceTimer = 0;
-volatile int pocetniforce=0;
-int br = 0;
-//ofstream ff[100];
+volatile int critical = 0;
 
 // zabranjuje prekide
 #define lock{\
- asm pushf;\
- asm cli;\
+	asm pushf;\
+	asm cli;\
 }
 
 // dozvoljava prekide
-#define unlock asm popf
+#define unlock{\
+	asm popf;\
+}
 
 // nova prekidna rutina tajmera
+
 void tick();
 
 void wake_sleeping() {
@@ -38,16 +39,15 @@ void wake_sleeping() {
 		return;
 	//cout <<"\nradim lover\n";
 	PCB::sleeping->lower();
-	if (PCB::sleeping->head->value <= 0) {
+	//PCB::sleeping->print();
+	while (PCB::sleeping->head != NULL && PCB::sleeping->head->value <=0) {
 		List::Node* tmp = PCB::sleeping->head->my->head;
-		while (tmp) {
-			//if (tmp->value<PCB::id && tmp->value>0) {
+		while (tmp != NULL && PCB::allPCB[tmp->value] != NULL) {
 			PCB::allPCB[tmp->value]->blocked = 0;
-			// waiting.delete_elem(waiting.head->value);
-			PCB::allPCB[tmp->value]->waitingOn->waiting.delete_elem(tmp->value);
+			PCB::allPCB[tmp->value]->slept = 0;
+			PCB::allPCB[tmp->value]->waitingOn->waiting->delete_elem(tmp->value);
+			PCB::allPCB[tmp->value]->waitingOn = NULL;
 			Scheduler::put(PCB::allPCB[tmp->value]);
-			//cout <<"budim nit "<<tmp->value<<endl;
-			//}
 			tmp = tmp->next;
 		}
 		PCB::sleeping->del_head();
@@ -57,15 +57,18 @@ void wake_sleeping() {
 
 void interrupt timer()
 {
-	pocetniforce = forceTimer;
-	if (!context_switch_on_demand || forceTimer) {
-		//wake_sleeping();
+	//cout <<"Timer "<<context_switch_on_demand<<cntr<<lockFlag<<critical<<endl;
+	if (context_switch_on_demand && forceTimer)
+		wake_sleeping();
+	if (!context_switch_on_demand) {
+		tick();
 		cntr--;
 	}
 	if (cntr == 0 || context_switch_on_demand)
 	{
-		if (lockFlag) {
+		if (!critical) {
 			forceTimer = 0;
+			
 			asm{
 				// cuva sp
 				mov tsp, sp
@@ -75,17 +78,19 @@ void interrupt timer()
 			PCB::running->sp = tsp;
 			PCB::running->ss = tss;
 
-			if (PCB::running->myId>0)
+			if (PCB::running->myId>0 && PCB::running->blocked == 0 && PCB::running->finished == 0 && PCB::running->slept == 0) 
 				Scheduler::put(PCB::running);
-			do
-			{
+			do{
 				PCB::running = Scheduler::get();
-				if (!PCB::running && PCB::running->myId!=1)
-				{
+				if (!PCB::running){
 					PCB::running = PCB::allPCB[PCB::wt->getId()];
 					break;
 				}
-			} while (PCB::running->active<=0 || PCB::running->blocked || PCB::running->finished);
+			} while (PCB::running->blocked || PCB::running->finished || PCB::running->slept);
+			// if (theEnd){
+			// 	cout <<"The end odabrao nit: "<<PCB::running->myId<<endl;
+			// }
+			//cout <<"Nit:"<<PCB::running->myId<<endl;
 
 			tsp = PCB::running->sp;
 			tss = PCB::running->ss;
@@ -105,10 +110,10 @@ void interrupt timer()
 			}
 		}
 	}
-	if (!context_switch_on_demand || forceTimer) {
+	if (!context_switch_on_demand) {
 		asm int 60h;
-		tick();
-		wake_sleeping();
+		if (!critical)
+			wake_sleeping();
 	}
 	context_switch_on_demand = 0;
 }
@@ -128,10 +133,9 @@ void Thread::waitToComplete()
 	if (myPCB->finished || !myPCB->started) {
 		return;
 	}
-	PCB::running->active-=1;
+	PCB::running->blocked = 1;
 	myPCB->waitForMe.insert(PCB::running->myId);
 	dispatch();
-	//PCB::running->active+=1;
 }
 
 void Thread::start()
@@ -151,7 +155,8 @@ void dispatch()
 {
 	//cout <<"dispatch "<<lockFlag<<" "<<cntr<<endl;
 	lock
-		context_switch_on_demand = 1;
+	context_switch_on_demand = 1;
+	critical = 0;
 	timer();
 	unlock
 }

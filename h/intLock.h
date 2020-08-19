@@ -4,9 +4,15 @@
 #include "Thread.h"
 
 extern int mutex_glb;
+extern volatile int critical,forceTimer;
 void mutex_glb_wait();
 
-#define intLock mutex_glb_wait();
-#define intUnlock mutex_glb = 1;
+
+
+// #define lockcout() critical = 1;
+// #define unlockcout() critical = 0; if(forceTimer) dispatch();
+
+#define intLock mutex_glb_wait(); 
+#define intUnlock mutex_glb = 1; 
 
 #endif

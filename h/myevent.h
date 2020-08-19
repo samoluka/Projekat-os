@@ -11,20 +11,19 @@ public:
         val = 0;
         waiting = -1;
         ev = ivtNo;
-        allSemEvent[curr++] = this;
+        allSemEvent[ivtNo] = this;
     }
     ~KernelEv() {
+       allSemEvent[ev] = NULL;
     }
     void wait();
     void signal();
-    static int maxSemEvent;
-    static int curr;
     static KernelEv** allSemEvent;
     unsigned char ev;
 private:
     unsigned int myThreadId;
     unsigned int waiting;
-    short val;
+    int val;
    
 };
 
