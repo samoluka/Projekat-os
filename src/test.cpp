@@ -23,6 +23,16 @@ extern volatile int forceTimer;
 
 int syncPrintf(const char *format, ...);
 
+//---------------------------------------------------------------------------//
+//  Otkomentarisati ukoliko se testiraju signali
+//---------------------------------------------------------------------------//
+#define SIGNAL
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+//  Ovo se menja u testu
+//---------------------------------------------------------------------------//
+
 Time TIME_SLICE = 2;   // 0 ili defaultTimeSlice
 
 int N = 3;            // 1 <= N <= 19
@@ -180,7 +190,7 @@ int userMain (int argc, char* argv[])
 #endif
 		pro[i]->start();
 	}
-  
+
 	kev = new KeyboardEvent(buff);
 	intUnlock
 	

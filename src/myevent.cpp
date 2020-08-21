@@ -21,7 +21,7 @@ extern volatile int theEnd;
 volatile int oldCE;
 
 //int KernelEv::maxSemEvent = 250;
-KernelEv** KernelEv::allSemEvent = new KernelEv*[255];
+KernelEv** KernelEv::allSemEvent = new KernelEv*[256];
 
 void KernelEv::wait() {
     lock;
@@ -41,7 +41,7 @@ void KernelEv::wait() {
     dispatch();
 }
 void KernelEv::signal() {
-    //lock;
+    lock;
     if (this->waiting == -1) {
         this->val = 1;
         return;
@@ -53,6 +53,6 @@ void KernelEv::signal() {
     }
     this->waiting = -1;
     //cout <<"signal za event:"<<this->myThreadId<<theEnd<<endl;
-    //unlock;
+    unlock;
     return;
 }

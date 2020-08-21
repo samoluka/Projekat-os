@@ -1,5 +1,6 @@
 #ifndef _dlist_h_
 #define _dlist_h_
+
 #include "IOSTREAM.H"
 #include "list.h"
 
@@ -16,7 +17,7 @@ private:
             this->value = value;
             my = new List();
             my->insert(id);
-            this->next = NULL;
+                this->next = NULL;
         }
         void insert(int id) {
             my->insert(id);
@@ -129,6 +130,9 @@ public:
             if (head == NULL){
                 tail = NULL;
             }
+            if(tmp->next){
+                tmp->next->value-=tmp->value;
+            }
             Node::del_node(tmp);
             n--;
         }
@@ -149,6 +153,9 @@ public:
                     if (last->next == NULL){
                         tail = last;
                     }
+                }
+                if (tmp->next){
+                    tmp->next->value -= tmp->value;
                 }
                 Node::del_node(tmp);
                 n--;

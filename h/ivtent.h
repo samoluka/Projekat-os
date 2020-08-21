@@ -14,6 +14,10 @@ public:
         setvect(numEntry, interruptRoutine);
         num = numEntry;
     }
+    ~IVTEntry(){
+        setvect(num,oldRout);
+        oldRout();
+    }
     void signal() {
         // for (int i=0; i<KernelEv::curr; i++) {
         //     if (KernelEv::allSemEvent[i]->ev == num)
