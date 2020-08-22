@@ -25,16 +25,15 @@ public:
     unsigned ss;
     unsigned sp;
     unsigned bp;
-    unsigned timeslice;
     KernelSem* waitingOn;
     int active;
     int quantum;
     int myId;
-    volatile int finished;
-    volatile int blocked;
-    volatile int started;
-    volatile int for_wait;
-    volatile int slept;
+    volatile short finished;
+    volatile short blocked;
+    volatile short started;
+    volatile short for_wait;
+    volatile short slept;
 
     SignalHandlerList regSignalHandler[16];
     short regSignalHandlerStatus[16];

@@ -14,7 +14,6 @@ volatile int context_switch_on_demand = 0;
 volatile int lockFlag = 1;
 volatile int forceTimer = 0;
 volatile int critical = 0;
-volatile int oldCritical=0;
 
 // zabranjuje prekide
 #define lock{\
@@ -65,7 +64,7 @@ void interrupt timer()
 	{
 		if (!critical) {
 			forceTimer = 0;
-		
+
 			asm{
 				// cuva sp
 				mov tsp, sp
@@ -75,7 +74,7 @@ void interrupt timer()
 			PCB::running->sp = tsp;
 			PCB::running->ss = tss;
 
-			if (PCB::running->myId>0 && PCB::running->blocked == 0 && PCB::running->finished == 0 && PCB::running->slept == 0) 
+			if (PCB::running->myId>0 && PCB::running->blocked == 0 && PCB::running->finished == 0 && PCB::running->slept == 0)
 				Scheduler::put(PCB::running);
 			while(1){
 				do{
@@ -100,14 +99,12 @@ void interrupt timer()
 					mov sp, tsp
 					mov ss, tss
 				}
-
-				oldCritical = critical;
 				critical = 1;
 				//asm pushf;
 				asm std;
 				PCB::running->doAllSignals();
 				asm cli;
-				critical = oldCritical;
+				critical = 0;
 				//asm popf;
 				if (!PCB::running->finished) break;
 			}
