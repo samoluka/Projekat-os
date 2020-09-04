@@ -101,7 +101,7 @@ void interrupt timer()
 				}
 				critical = 1;
 				//asm pushf;
-				asm std;
+				asm sti;
 				PCB::running->doAllSignals();
 				asm cli;
 				critical = 0;

@@ -3,7 +3,6 @@
 
 #include "event.h"
 #include "PCB.h"
-
 class KernelEv {
 public:
     KernelEv(IVTNo ivtNo) {
